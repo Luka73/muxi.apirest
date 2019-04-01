@@ -76,7 +76,7 @@ public class Terminal {
 	public String getVERFM() {
 		return VERFM;
 	}
-	public void setVERFM(String vERFM) {
-		VERFM = vERFM;
+	public void setVERFM(String VERFM) {
+		this.VERFM = VERFM;
 	}
 }

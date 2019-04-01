@@ -15,7 +15,7 @@ public class JsonUtils {
 		p1.put("version", array[6]);
 		p1.put("mxr", Integer.parseInt(array[7]));
 		p1.put("mxf", array[8]);
-		p1.put("VERFM", array[9]);
+		p1.put("verfm", array[9]);
 		
 		return p1;
 	}

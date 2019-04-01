@@ -29,7 +29,7 @@
 			"type": "integer"
 		},
 		"mxf": {
-			"type": "integer"
+			"type": "string"
 		},
 		"VERFM": {
 			"type": "string"

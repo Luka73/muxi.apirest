@@ -1,15 +1,12 @@
 package com.muxi.apirest.controller;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.codehaus.jackson.map.ObjectMapper;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,42 +17,34 @@ import org.springframework.web.bind.annotation.RestController;
 import com.muxi.apirest.model.Terminal;
 import com.muxi.apirest.repository.TerminalRepository;
 import com.muxi.apirest.utils.JsonUtils;
+import com.muxi.apirest.utils.SchemaValidation;
 
 
 @RestController
-@RequestMapping(value="/api")
+@RequestMapping(value="/v1")
 public class TerminalController {
 	@Autowired
 	TerminalRepository terminalRepository;
 	
-	@PostMapping("/terminal")
-	public void postTerminal(@RequestBody String terminal) throws IOException{
+	@PostMapping(path="/terminal", consumes=MediaType.TEXT_HTML_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	public void postTerminal(@Validated() @RequestBody String terminal) throws IOException{
 		String[] splitted = terminal.split(";");
 		JsonUtils jsonUtils = new JsonUtils();
+		SchemaValidation vJson = new SchemaValidation();
 		JSONObject json = jsonUtils.stringToJson(splitted);
-	
+		boolean isValid = vJson.validaJson(json);
 		
-		try (InputStream inputStream = new ClassPathResource("schema.json").getInputStream()) {
-		  JSONObject rawSchema = new JSONObject(new JSONTokener(inputStream));
-		  Schema schema = SchemaLoader.load(rawSchema);
-		  schema.validate(new JSONObject(json));
-		  
-		  //terminalRepository.save();
-		  
-		  //System.out.println("Funcionou!");
-		}
-		catch(NumberFormatException e){
-			throw new NumberFormatException ("Formato inválido");
-		}
-		catch(Exception e)
+		if(isValid)
 		{
-			System.out.println(e);
-		}
+			String sJson = json.toString();
+			System.out.println(sJson);
+			ObjectMapper mapper = new ObjectMapper();
+			Terminal term = mapper.readValue(sJson, Terminal.class);
+			terminalRepository.save(term);
+		}              
 	}
 	
-	
-	
-	@GetMapping("/terminal/{id}")
+	@GetMapping(path="/terminal/{id}", produces=MediaType.APPLICATION_JSON_VALUE)
 	public Terminal listaProdutoUnico(@PathVariable(value="id") int logic) {
 		return terminalRepository.findById(logic);
 	}

@@ -75,6 +75,25 @@
 			<artifactId>jackson-mapper-asl</artifactId>
 			<version>1.9.13</version>
 		</dependency>
+		<dependency>
+    		<groupId>junit</groupId>
+    		<artifactId>junit</artifactId>
+    		<scope>test</scope>
+		</dependency>
+		<dependency>
+    		<groupId>io.rest-assured</groupId>
+    		<artifactId>rest-assured</artifactId>
+    		<scope>test</scope>
+		</dependency>	
+		<dependency> 
+	        <groupId>org.hibernate</groupId>
+	        <artifactId>hibernate-validator</artifactId>
+	        <version>6.0.13.Final</version>
+	    </dependency> 
+	    <dependency> 
+	        <groupId>org.glassfish</groupId>
+	        <artifactId>javax.el</artifactId>
+	     </dependency>
 	</dependencies>
 
 	<build>

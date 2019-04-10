@@ -1,4 +1,4 @@
-package com.muxi.apirest.utils;
+package com.muxi.apirest.service;
 
 import java.io.InputStream;
 
@@ -7,7 +7,9 @@ import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
 
+@Service
 public class SchemaValidation {
 
 	public boolean validaJson(JSONObject json) {

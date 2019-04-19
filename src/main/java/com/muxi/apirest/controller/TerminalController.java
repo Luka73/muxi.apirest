@@ -10,13 +10,13 @@ import javax.validation.Validator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -51,7 +51,7 @@ public class TerminalController {
     }
 	
 	@PostMapping(path=ConstantPaths.API.URL_POST, consumes=MediaType.TEXT_HTML_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<?> registerUser(@RequestBody String terminal, BindingResult result){
+	public ResponseEntity<?> postTerminal(@RequestBody String terminal, BindingResult result){
 
 		try 
 		{
@@ -62,24 +62,14 @@ public class TerminalController {
 				
 			ObjectMapper mapper = new ObjectMapper();
 			Terminal term = mapper.readValue(json.toString(), Terminal.class);
-	        Set<ConstraintViolation<Terminal>> violations = validator.validate(term);
-	      
 	        
-	        if (violations.size() == 0) 
-	        {	        	
+			if(verifyViolations(term) == null) {
 				terminalRepository.save(term);
 				return ResponseEntity.ok(term);
-	        	
-	        } else {	  
-	        	
-	        	List<String> errors = new ArrayList<String>();
-
-	        	for (ConstraintViolation<Terminal> v : violations) {
-	        		 errors.add(v.getMessage());
-	        	}
-	        	
-	        	return ResponseEntity.badRequest().body(errors);  
-	        }
+			} else {
+				return ResponseEntity.badRequest().body(verifyViolations(term));  
+			}
+	        
 		}
 		catch(Exception e)
 		{
@@ -88,9 +78,32 @@ public class TerminalController {
 	}
 	
 	@GetMapping(path=ConstantPaths.API.URL_GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	public Terminal listaProdutoUnico(@PathVariable(value="id") Integer logic) {
+	public Terminal getTerminalByLogic(@PathVariable(value="id") Integer logic) {
 		return terminalRepository.findByLogic(logic);
 	}
 	
+	
+	@PutMapping(path=ConstantPaths.API.URL_PUT, produces=MediaType.APPLICATION_JSON_VALUE)
+	public Terminal putTerminalByLogic(@PathVariable(value="id") Integer logic) {
+		return terminalRepository.findByLogic(logic);
+	}
+	
+	public List<String> verifyViolations(Terminal terminal){
+		
+		Set<ConstraintViolation<Terminal>> violations = validator.validate(terminal);
+		List<String> errors = new ArrayList<String>();
+		
+		if (violations.size() == 0) 
+        {	        	
+			errors = null;
+        	
+        } else {	  
+
+        	for (ConstraintViolation<Terminal> v : violations) {
+        		 errors.add(v.getMessage());
+        	}
+        }
+		return errors;
+	}
 	
 }

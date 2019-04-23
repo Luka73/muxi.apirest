@@ -19,7 +19,7 @@ public class JsonUtils {
 			p1.put("mxf", array[8]);
 			if(array.length == 10)
 				p1.put("verfm", array[9]);
-			
+		
 			return p1;
 	}
 }

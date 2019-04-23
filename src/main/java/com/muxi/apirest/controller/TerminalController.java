@@ -10,6 +10,7 @@ import javax.validation.Validator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -26,8 +27,12 @@ import com.muxi.apirest.service.ConstantPaths;
 import com.muxi.apirest.dto.Response;
 import com.muxi.apirest.model.Terminal;
 import com.muxi.apirest.repository.TerminalRepository;
+import com.muxi.apirest.response.VerifyViolations;
 import com.muxi.apirest.service.JsonUtils;
 import com.muxi.apirest.service.SchemaValidation;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 
 @RestController
@@ -40,17 +45,17 @@ public class TerminalController {
 	private JsonUtils jsonUtils;
 	@Autowired
 	private SchemaValidation vJson;
-	@Autowired
-	private Validator validator;
 	
 	Response response = new Response(); 
-	
+	VerifyViolations valid = new VerifyViolations();
+
 	@RequestMapping(value = "**", method = RequestMethod.POST)
     public ResponseEntity<?> postUnauthorizedEndpoint() {
         return ResponseEntity.badRequest().body(response);
     }
-	
+
 	@PostMapping(path=ConstantPaths.API.URL_POST, consumes=MediaType.TEXT_HTML_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Create terminal", notes = "Creating a new terminal", response = Terminal.class)
 	public ResponseEntity<?> postTerminal(@RequestBody String terminal, BindingResult result){
 
 		try 
@@ -63,11 +68,11 @@ public class TerminalController {
 			ObjectMapper mapper = new ObjectMapper();
 			Terminal term = mapper.readValue(json.toString(), Terminal.class);
 	        
-			if(verifyViolations(term) == null) {
+			if(valid.verifyViolations(term) == null) {
 				terminalRepository.save(term);
 				return ResponseEntity.ok(term);
 			} else {
-				return ResponseEntity.badRequest().body(verifyViolations(term));  
+				return ResponseEntity.badRequest().body(valid.verifyViolations(term));  
 			}
 	        
 		}
@@ -78,32 +83,34 @@ public class TerminalController {
 	}
 	
 	@GetMapping(path=ConstantPaths.API.URL_GET, produces=MediaType.APPLICATION_JSON_VALUE)
-	public Terminal getTerminalByLogic(@PathVariable(value="id") Integer logic) {
+	public Terminal getTerminalByLogic(@ApiParam("The unique identifier of the terminal") @PathVariable(value="id") Integer logic) {
 		return terminalRepository.findByLogic(logic);
 	}
 	
 	
-	@PutMapping(path=ConstantPaths.API.URL_PUT, produces=MediaType.APPLICATION_JSON_VALUE)
-	public Terminal putTerminalByLogic(@PathVariable(value="id") Integer logic) {
-		return terminalRepository.findByLogic(logic);
+    @ApiOperation(value = "Update terminal", notes = "Updating an existing terminal", response = Terminal.class)
+	@PutMapping(path=ConstantPaths.API.URL_PUT, consumes=MediaType.TEXT_HTML_VALUE, produces=MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<?> putTerminalByLogic(@PathVariable(value="id") Integer logic, @RequestBody String terminal) {
+    	
+    	try 
+		{
+			JSONObject json = jsonUtils.stringToJson(terminal.split(";"));
+			Terminal term = terminalRepository.findByLogic(Integer.parseInt(json.getString("logic")));
+			
+			 if (term == null || !vJson.validaJson(json)) {
+	             return ResponseEntity.badRequest().body(response);
+	         }
+			 
+			if(valid.verifyViolations(term) == null) {
+				terminalRepository.save(term);
+				return ResponseEntity.ok(term);
+			} else {
+				return ResponseEntity.badRequest().body(valid.verifyViolations(term));  
+			} 
+		}
+		catch(Exception e)
+		{
+			return ResponseEntity.badRequest().body(response);
+		}
 	}
-	
-	public List<String> verifyViolations(Terminal terminal){
-		
-		Set<ConstraintViolation<Terminal>> violations = validator.validate(terminal);
-		List<String> errors = new ArrayList<String>();
-		
-		if (violations.size() == 0) 
-        {	        	
-			errors = null;
-        	
-        } else {	  
-
-        	for (ConstraintViolation<Terminal> v : violations) {
-        		 errors.add(v.getMessage());
-        	}
-        }
-		return errors;
-	}
-	
 }
